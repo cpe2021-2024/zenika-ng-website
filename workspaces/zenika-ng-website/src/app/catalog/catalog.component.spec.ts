@@ -1,9 +1,11 @@
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ApiService } from '../shared/services/api.service';
-import { MockApiService } from '../shared/services/api.service.mock';
+import { WELCOME_MSG } from '../app.provider';
+import { BasketService } from '../basket/basket.service';
+import { MockBasketService } from '../basket/basket.service.mock';
 import { CatalogComponent } from './catalog.component';
+import { CatalogService } from './catalog.service';
+import { MockCatalogService } from './catalog.service.mock';
 
 describe('CatalogComponent', () => {
   let component: CatalogComponent;
@@ -11,19 +13,21 @@ describe('CatalogComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [CatalogComponent],
-      imports: [RouterTestingModule],
+      imports: [CatalogComponent, RouterTestingModule],
       providers: [
         {
-          provide: ApiService,
-          useValue: MockApiService,
+          provide: CatalogService,
+          useValue: MockCatalogService,
         },
         {
-          provide: 'WELCOME_MSG',
+          provide: BasketService,
+          useValue: MockBasketService,
+        },
+        {
+          provide: WELCOME_MSG,
           useValue: 'Welcome to unit testing',
         },
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     });
 
     fixture = TestBed.createComponent(CatalogComponent);

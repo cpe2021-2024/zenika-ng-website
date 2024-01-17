@@ -8,8 +8,7 @@ describe('ProductComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule],
-      declarations: [ProductComponent],
+      imports: [RouterTestingModule, ProductComponent],
     });
 
     fixture = TestBed.createComponent(ProductComponent);

@@ -1,48 +1,55 @@
-import { Component, Inject } from '@angular/core';
+import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { EMPTY, catchError, zip } from 'rxjs';
+import { AlertService } from '../alert/alert.service';
+import { WELCOME_MSG } from '../app.provider';
 import { BasketService } from '../basket/basket.service';
-import { BasketItem } from '../basket/basket.types';
-import { Product } from '../product/product.types';
-import { ApiService } from '../shared/services/api.service';
+import { CatalogService } from './catalog.service';
+import { ProductComponent } from './product/product.component';
+import { Product } from './product/product.types';
 
 @Component({
   selector: 'app-catalog',
+  standalone: true,
+  imports: [AsyncPipe, CurrencyPipe, NgFor, NgIf, RouterLink, ProductComponent],
   templateUrl: './catalog.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CatalogComponent {
-  protected products: Product[] = [];
+export class CatalogComponent implements OnInit {
+  protected welcomeMsg = inject(WELCOME_MSG);
 
- 
+  #basketService = inject(BasketService);
 
-  constructor(
-    @Inject('WELCOME_MSG') protected welcomeMsg: string,
-    private apiService: ApiService,
-    private basketService: BasketService,
-  ) {
-    this.apiService.getProducts().subscribe((products) => (this.products = products));
-    
+  #catalogService = inject(CatalogService);
 
-    this.basketService.fetch().subscribe();
+  #alertService = inject(AlertService);
+
+  protected total$ = this.#basketService.total$;
+
+  protected products$ = this.#catalogService.products$;
+
+  protected isStockEmpty$ = this.#catalogService.isStockEmpty$;
+
+  protected isAvailable(product: Product) {
+    return this.#catalogService.isAvailable(product);
   }
 
-  protected get basketTotal(): number {
-    return this.basketService.total;
+  ngOnInit(): void {
+    zip([this.#catalogService.fetch(), this.#basketService.fetch()])
+      .pipe(
+        catchError(() => {
+          this.#alertService.addDanger("😲 Désolé, impossible d'accéder au catalogue.");
+          return EMPTY;
+        }),
+      )
+      .subscribe();
   }
 
   protected addToBasket(product: Product): void {
-    this.basketService.addItem(product.id).subscribe((basketItem) => {
-      this.decreaseStock(product);
+    this.#basketService.addItem(product.id).subscribe({
+      next: () => this.#catalogService.decreaseStock(product.id),
+      error: () => this.#alertService.addDanger("😱 Désolé, une erreur s'est produite."),
     });
-  }
-
-  private decreaseStock(product: Product): void {
-    product.stock -= 1;
-  }
-
-  protected isAvailable(product: Product): boolean {
-    return product.stock !== 0;
-  }
-
-  protected get isStockEmpty(): boolean {
-    return this.products.every(({ stock }) => stock === 0);
   }
 }

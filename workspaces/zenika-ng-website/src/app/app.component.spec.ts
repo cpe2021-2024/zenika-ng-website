@@ -1,13 +1,9 @@
-/// <reference types="@types/jasmine" />
-
-// NOTE: the line above helps VSCode to understand that `describe()`, `expect()` and other global functions are all coming from the Jasmine framework.
-// I noticed that putting this reference even in a single file, helps VSCode to identify Jasmine as the testing framework for all spec files in the workspace.
-// Without the line above, VSCode assumes that `describe()` comes from Mocha and `expect()` from Chai...
-// This confusion probably comes from the fact that Cypress (which is installed in the workspace) uses Chai and not Jasmine.
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+import { FooterComponent } from './footer/footer.component';
+import { MenuComponent } from './menu/menu.component';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -15,9 +11,10 @@ describe('AppComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [AppComponent],
-      imports: [RouterTestingModule],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      imports: [AppComponent, RouterTestingModule],
+    }).overrideComponent(AppComponent, {
+      remove: { imports: [FooterComponent, MenuComponent] },
+      add: { schemas: [CUSTOM_ELEMENTS_SCHEMA] },
     });
 
     fixture = TestBed.createComponent(AppComponent);
